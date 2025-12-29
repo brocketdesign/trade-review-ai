@@ -60,19 +60,30 @@ Market Context ({market_context.symbol}):
             status = "closed" if trade.exit_price else "open"
             pnl_str = f"P&L: ${trade.pnl:.2f}" if trade.pnl is not None else "P&L: N/A"
             
+            # Build exit info
+            if trade.exit_price:
+                exit_str = f"- Exit: ${trade.exit_price:.2f} at {trade.exit_timestamp.strftime('%Y-%m-%d %H:%M')}"
+            else:
+                exit_str = "- Exit: Still open"
+            
+            # Build stop loss and take profit strings
+            sl_str = f"${trade.stop_loss:.2f}" if trade.stop_loss else "None"
+            tp_str = f"${trade.take_profit:.2f}" if trade.take_profit else "None"
+            rr_str = f"{evaluation.risk_reward_ratio:.2f}" if evaluation.risk_reward_ratio else "N/A"
+            
             trades_str += f"""
 Trade {trade.trade_id} ({status}):
 - Side: {trade.side.upper()}
 - Entry: ${trade.entry_price:.2f} at {trade.timestamp.strftime('%Y-%m-%d %H:%M')}
-- Exit: ${trade.exit_price:.2f} at {trade.exit_timestamp.strftime('%Y-%m-%d %H:%M')}" if trade.exit_price else "Still open"
+{exit_str}
 - {pnl_str}
-- Stop Loss: ${trade.stop_loss:.2f}" if trade.stop_loss else "None"
-- Take Profit: ${trade.take_profit:.2f}" if trade.take_profit else "None"
+- Stop Loss: {sl_str}
+- Take Profit: {tp_str}
 - Entry Quality: {evaluation.entry_quality}
 - Exit Quality: {evaluation.exit_quality if evaluation.exit_quality else "N/A (open)"}
 - Aligned with Trend: {evaluation.aligned_with_trend}
 - Execution Discipline: {evaluation.execution_discipline}
-- Risk/Reward: {evaluation.risk_reward_ratio:.2f if evaluation.risk_reward_ratio else "N/A"}
+- Risk/Reward: {rr_str}
 - Key Observations: {'; '.join(evaluation.key_observations)}
 """
         

@@ -1,7 +1,7 @@
 """Data ingestion module for loading market data and trade logs."""
 
 from datetime import datetime
-from typing import List
+from typing import List, Union
 import pandas as pd
 from pathlib import Path
 
@@ -109,10 +109,10 @@ class DataIngestion:
     
     @staticmethod
     def filter_by_date_range(
-        data: List[OHLCV] | List[Trade],
+        data: Union[List[OHLCV], List[Trade]],
         start_date: datetime,
         end_date: datetime
-    ) -> List[OHLCV] | List[Trade]:
+    ) -> Union[List[OHLCV], List[Trade]]:
         """
         Filter data by date range.
         
