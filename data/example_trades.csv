@@ -1,0 +1,6 @@
+trade_id,timestamp,symbol,side,entry_price,quantity,exit_price,exit_timestamp,stop_loss,take_profit,pnl,notes
+T001,2024-01-01 10:30:00,AAPL,buy,102.00,100,105.50,2024-01-01 14:30:00,100.50,106.00,350.00,Entry near support with bullish trend
+T002,2024-01-02 11:00:00,AAPL,buy,107.00,100,108.80,2024-01-02 14:00:00,105.50,109.00,180.00,Continuation trade in uptrend
+T003,2024-01-03 09:30:00,AAPL,buy,109.20,100,110.50,2024-01-03 15:00:00,108.00,111.00,130.00,Breakout trade
+T004,2024-01-04 10:00:00,AAPL,buy,110.80,100,99.50,2024-01-04 12:00:00,109.50,113.00,-130.00,Premature entry - stopped out
+T005,2024-01-04 14:00:00,AAPL,buy,112.00,100,,,110.50,114.00,,Re-entry after stop out with wider stop
