@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trade Review AI - Dashboard</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i data-lucide="line-chart"></i>
+                <span>Trade Review AI</span>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-section="dashboard">
+                <i data-lucide="layout-dashboard"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-section="trades">
+                <i data-lucide="bar-chart-3"></i>
+                <span>Trades</span>
+            </a>
+            <a href="#" class="nav-item" data-section="add-trade">
+                <i data-lucide="plus-circle"></i>
+                <span>Add Trade</span>
+            </a>
+            <a href="#" class="nav-item" data-section="analysis">
+                <i data-lucide="brain"></i>
+                <span>AI Analysis</span>
+            </a>
+            <a href="#" class="nav-item" data-section="market">
+                <i data-lucide="candlestick-chart"></i>
+                <span>Market Context</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <div class="analysis-controls">
+                <h4>Analysis Parameters</h4>
+                <div class="control-group">
+                    <label for="symbol">Symbol</label>
+                    <div class="symbol-input-wrapper">
+                        <input type="text" id="symbol" value="AAPL" placeholder="Enter symbol" autocomplete="off">
+                        <div class="symbol-suggestions" id="symbol-suggestions"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="data-source">Data Source</label>
+                    <select id="data-source">
+                        <option value="live" selected>Live Data (Yahoo Finance)</option>
+                        <option value="sample">Sample Data (CSV)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="period">Period</label>
+                    <select id="period">
+                        <option value="1d">1 Day</option>
+                        <option value="5d">5 Days</option>
+                        <option value="1mo" selected>1 Month</option>
+                        <option value="3mo">3 Months</option>
+                        <option value="6mo">6 Months</option>
+                        <option value="1y">1 Year</option>
+                        <option value="2y">2 Years</option>
+                        <option value="custom">Custom Dates</option>
+                    </select>
+                </div>
+                <div class="control-group" id="custom-dates" style="display: none;">
+                    <label for="start-date">Start Date</label>
+                    <input type="date" id="start-date" value="2024-01-01">
+                    <label for="end-date">End Date</label>
+                    <input type="date" id="end-date" value="2024-01-31">
+                </div>
+                <div class="control-group">
+                    <label for="interval">Interval</label>
+                    <select id="interval">
+                        <option value="1m">1 Minute</option>
+                        <option value="5m">5 Minutes</option>
+                        <option value="15m">15 Minutes</option>
+                        <option value="1h">1 Hour</option>
+                        <option value="1d" selected>Daily</option>
+                        <option value="1wk">Weekly</option>
+                    </select>
+                </div>
+                <button id="run-analysis" class="btn-primary">
+                    <i data-lucide="play"></i>
+                    Run Analysis
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-left">
+                <h1 id="page-title">Dashboard</h1>
+                <p class="subtitle" id="page-subtitle">Overview of your trading performance</p>
+            </div>
+            <div class="header-right">
+                <div class="status-indicator" id="status-indicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Ready</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard-section" class="content-section active">
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon profit">
+                        <i data-lucide="trending-up"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Total P&L</span>
+                        <span class="kpi-value" id="kpi-total-pnl">$0.00</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon info">
+                        <i data-lucide="percent"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Win Rate</span>
+                        <span class="kpi-value" id="kpi-win-rate">0%</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon neutral">
+                        <i data-lucide="activity"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Total Trades</span>
+                        <span class="kpi-value" id="kpi-total-trades">0</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">
+                        <i data-lucide="target"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Avg P&L/Trade</span>
+                        <span class="kpi-value" id="kpi-avg-pnl">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-grid">
+                <!-- Price Chart -->
+                <div class="chart-card large">
+                    <div class="card-header">
+                        <h3>Price Chart</h3>
+                        <div class="card-actions">
+                            <span class="badge" id="trend-badge">-</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="price-chart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Performance Summary -->
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h3>Performance Summary</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="performance-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Second Charts Row -->
+            <div class="charts-grid three-col">
+                <!-- Trade Quality -->
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h3>Entry Quality</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="entry-quality-chart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Discipline -->
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h3>Execution Discipline</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="discipline-chart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Trend Alignment -->
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h3>Trend Alignment</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trend-alignment-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Trades Section -->
+        <section id="trades-section" class="content-section">
+            <div class="trades-container">
+                <div class="card full-width">
+                    <div class="card-header">
+                        <h3>Trade Evaluations</h3>
+                        <div class="card-actions">
+                            <span class="badge" id="trades-count">0 trades</span>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="trades-table">
+                            <thead>
+                                <tr>
+                                    <th>Trade ID</th>
+                                    <th>Side</th>
+                                    <th>Entry</th>
+                                    <th>Exit</th>
+                                    <th>P&L</th>
+                                    <th>Entry Quality</th>
+                                    <th>Discipline</th>
+                                    <th>Trend Aligned</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trades-table-body">
+                                <!-- Trades will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Trade Details -->
+                <div class="card full-width" id="trade-details-card" style="display: none;">
+                    <div class="card-header">
+                        <h3>Trade Details</h3>
+                        <button class="btn-icon" id="close-trade-details">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+                    <div class="trade-details-content" id="trade-details-content">
+                        <!-- Trade details will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Add Trade Section -->
+        <section id="add-trade-section" class="content-section">
+            <div class="add-trade-container">
+                <div class="card full-width">
+                    <div class="card-header">
+                        <h3><i data-lucide="plus-circle"></i> Add Manual Trade</h3>
+                    </div>
+                    <form id="add-trade-form" class="trade-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="trade-symbol">Symbol *</label>
+                                <input type="text" id="trade-symbol" placeholder="e.g., AAPL" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="trade-side">Side *</label>
+                                <select id="trade-side" required>
+                                    <option value="buy">Buy (Long)</option>
+                                    <option value="sell">Sell (Short)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="trade-entry-price">Entry Price *</label>
+                                <input type="number" id="trade-entry-price" step="0.01" placeholder="0.00" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="trade-quantity">Quantity *</label>
+                                <input type="number" id="trade-quantity" step="0.01" placeholder="0" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="trade-entry-time">Entry Time</label>
+                                <input type="datetime-local" id="trade-entry-time">
+                            </div>
+                            <div class="form-group">
+                                <label for="trade-exit-price">Exit Price (if closed)</label>
+                                <input type="number" id="trade-exit-price" step="0.01" placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="trade-stop-loss">Stop Loss</label>
+                                <input type="number" id="trade-stop-loss" step="0.01" placeholder="0.00">
+                            </div>
+                            <div class="form-group">
+                                <label for="trade-take-profit">Take Profit</label>
+                                <input type="number" id="trade-take-profit" step="0.01" placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="trade-notes">Notes / Strategy</label>
+                                <textarea id="trade-notes" rows="3" placeholder="Optional notes about the trade..."></textarea>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary">
+                                <i data-lucide="plus"></i>
+                                Add Trade
+                            </button>
+                            <button type="button" class="btn-secondary" id="clear-form-btn">
+                                <i data-lucide="eraser"></i>
+                                Clear Form
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Recent Manual Trades -->
+                <div class="card full-width">
+                    <div class="card-header">
+                        <h3><i data-lucide="list"></i> Manual Trades</h3>
+                        <div class="card-actions">
+                            <button class="btn-icon-text" id="clear-all-trades-btn" title="Clear all trades">
+                                <i data-lucide="trash-2"></i>
+                                Clear All
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="trades-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Symbol</th>
+                                    <th>Side</th>
+                                    <th>Entry</th>
+                                    <th>Exit</th>
+                                    <th>Qty</th>
+                                    <th>P&L</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="manual-trades-table-body">
+                                <tr class="empty-row">
+                                    <td colspan="9">No manual trades yet. Add your first trade above.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Analysis Section -->
+        <section id="analysis-section" class="content-section">
+            <div class="analysis-container">
+                <div class="card full-width">
+                    <div class="card-header">
+                        <h3><i data-lucide="brain"></i> AI Commentary</h3>
+                        <div class="card-actions">
+                            <span class="badge ai-badge">GPT-4 Powered</span>
+                        </div>
+                    </div>
+                    <div class="ai-commentary" id="ai-commentary">
+                        <div class="commentary-placeholder">
+                            <i data-lucide="message-square-text"></i>
+                            <p>Run an analysis to see AI-generated insights</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Observations -->
+                <div class="card full-width">
+                    <div class="card-header">
+                        <h3><i data-lucide="lightbulb"></i> Key Observations by Trade</h3>
+                    </div>
+                    <div class="observations-list" id="observations-list">
+                        <!-- Observations will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Market Context Section -->
+        <section id="market-section" class="content-section">
+            <div class="market-container">
+                <!-- Market Overview -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Market Overview</h3>
+                    </div>
+                    <div class="market-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Symbol</span>
+                            <span class="stat-value" id="market-symbol">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Trend</span>
+                            <span class="stat-value" id="market-trend">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Trend Strength</span>
+                            <span class="stat-value" id="market-trend-strength">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Volatility (ATR)</span>
+                            <span class="stat-value" id="market-volatility">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Avg Volume</span>
+                            <span class="stat-value" id="market-volume">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Support & Resistance -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Key Levels</h3>
+                    </div>
+                    <div class="levels-container">
+                        <div class="levels-column">
+                            <h4 class="levels-title resistance">Resistance</h4>
+                            <ul class="levels-list" id="resistance-levels">
+                                <!-- Resistance levels will be inserted here -->
+                            </ul>
+                        </div>
+                        <div class="levels-column">
+                            <h4 class="levels-title support">Support</h4>
+                            <ul class="levels-list" id="support-levels">
+                                <!-- Support levels will be inserted here -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Volume Chart -->
+                <div class="card full-width">
+                    <div class="card-header">
+                        <h3>Volume Analysis</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="volume-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loader">
+            <div class="loader-spinner"></div>
+            <p>Running Analysis...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
